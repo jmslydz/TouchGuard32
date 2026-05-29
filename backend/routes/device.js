@@ -28,6 +28,9 @@ router.post('/alert', async (req, res) => {
         message: `${alert.device}: ${alert.status}`,
         timestamp: alert.createdAt,
       });
+      if (status === 'Device Online') {
+        io.emit('device-status', { device: device.trim(), status: 'online', lastSeen: new Date() });
+      }
     }
     res.status(201).json({ message: 'Alert recorded', alert });
   } catch (error) {
