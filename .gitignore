@@ -8,6 +8,12 @@ node_modules/
 .env.local
 .env.production
 
+# ESP32 private config (each person has their own)
+esp32/touchguard32/config.h
+
+# Arduino build artifacts
+esp32/touchguard32/build/
+
 # IDE
 .vscode/
 .idea/
@@ -19,6 +25,12 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+*.err
+
+# Runtime files
+backend/backend.log
+backend/backend.err
+frontend/frontend.log
 
 # Build output
 frontend/dist/

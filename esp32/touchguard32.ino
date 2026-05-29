@@ -15,12 +15,11 @@
 #include <ArduinoJson.h>
 
 // ===== CONFIGURATION =====
-// Replace with your WiFi credentials
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "ALHN-6730 5G";
+const char* WIFI_PASSWORD = "HDp3CqnaKe1";
 
-// Backend server URL (your Render/Railway/ngrok URL)
-const char* SERVER_URL    = "https://your-backend.onrender.com";
+// Backend server URL (your PC's local IP where the backend runs)
+const char* SERVER_URL    = "http://192.168.1.14:5000";
 
 // Device name sent with alerts
 const char* DEVICE_NAME   = "ESP32";

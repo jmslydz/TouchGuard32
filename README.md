@@ -312,6 +312,72 @@ git commit -m "Add responsive layout for mobile devices"
 
 ---
 
+## For Your Friends — Quick Start
+
+Each person needs their own **WiFi credentials** and **server URL**. Here's how:
+
+### 1. Clone & install
+```bash
+git clone <your-repo-url>
+cd touchguard32
+
+# Backend
+cd backend && npm install && cd ..
+
+# Frontend
+cd frontend && npm install && cd ..
+```
+
+### 2. Set up the ESP32 config
+```bash
+# Copy the example config (DO NOT edit the example file)
+cp esp32/touchguard32/config.example.h esp32/touchguard32/config.h
+```
+Then open `esp32/touchguard32/config.h` and replace with their own:
+```cpp
+const char* WIFI_SSID     = "TheirWiFi";
+const char* WIFI_PASSWORD = "TheirPassword";
+const char* SERVER_URL    = "http://192.168.x.x:5000";  // their PC's IP
+```
+
+### 3. Backend `.env`
+```bash
+cp backend/.env.example backend/.env
+```
+Edit `backend/.env` with their own `JWT_SECRET` and `MONGODB_URI` (or leave blank for in-memory DB).
+
+### 4. Frontend `.env`
+```bash
+cp frontend/.env.example frontend/.env
+```
+
+### 5. Run
+```bash
+# Terminal 1 — Backend
+cd backend && npm run dev
+
+# Terminal 2 — Frontend
+cd frontend && npm run dev
+
+# Upload ESP32 firmware (compile via Arduino IDE or arduino-cli)
+```
+
+Login: `admin` / `admin123`
+
+### What files each person MUST change
+| File | What to set |
+|------|-------------|
+| `esp32/touchguard32/config.h` | Their WiFi SSID, password, PC's local IP |
+| `backend/.env` | Their `JWT_SECRET` + `MONGODB_URI` (optional) |
+
+### What's gitignored (stays private)
+- `esp32/touchguard32/config.h`
+- `backend/.env`
+- `frontend/.env`
+- `node_modules/`
+
+---
+
 ## Security Features
 
 - **JWT authentication** with Bearer token scheme

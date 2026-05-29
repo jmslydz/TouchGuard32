@@ -88,7 +88,21 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
+const seedDefaultUser = async () => {
+  try {
+    const User = require('./models/User');
+    const existing = await User.findOne({ username: 'admin' });
+    if (!existing) {
+      await User.create({ username: 'admin', password: 'admin123' });
+      console.log('Default user seeded: admin / admin123');
+    }
+  } catch (err) {
+    console.error('Seed error:', err.message);
+  }
+};
+
+connectDB().then(async () => {
+  await seedDefaultUser();
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`WebSocket server ready`);

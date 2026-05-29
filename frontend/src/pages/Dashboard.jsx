@@ -6,6 +6,7 @@ import AlertStatsCard from '../components/AlertStatsCard'
 import EspStatusIndicator from '../components/EspStatusIndicator'
 import LiveAlertCard from '../components/LiveAlertCard'
 import ActivityFeed from '../components/ActivityFeed'
+import EspBoardView from '../components/EspBoardView'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 
@@ -66,7 +67,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <ActivityFeed />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <EspBoardView />
+        <div className="space-y-6">
+          <ActivityFeed />
+        </div>
+      </div>
     </div>
   )
 }
