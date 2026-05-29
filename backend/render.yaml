@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: touchguard32-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: PORT
+        value: "5000"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        value: https://touchguard32.vercel.app
+      - key: MONGODB_URI
+        sync: false

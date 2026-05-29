@@ -2,6 +2,19 @@
 
 A full-stack IoT web application that detects touch/button presses on an **ESP32** and displays real-time alerts on a **dark-themed dashboard** using **WebSocket communication**.
 
+## Documentation
+
+The full IT323 Final PIT research paper is available in the `docs/` directory:
+
+| File | Content |
+|------|---------|
+| [`docs/01-Chapter-1-Introduction.md`](docs/01-Chapter-1-Introduction.md) | Chapter 1: The Problem and Its Background |
+| [`docs/02-Chapter-2-Literature-Review.md`](docs/02-Chapter-2-Literature-Review.md) | Chapter 2: Review of Related Literature |
+| [`docs/03-Chapter-3-Methodology.md`](docs/03-Chapter-3-Methodology.md) | Chapter 3: Technical Background and Methodology |
+| [`docs/04-Chapter-4-Results.md`](docs/04-Chapter-4-Results.md) | Chapter 4: Results and Discussion |
+| [`docs/05-Chapter-5-Conclusion.md`](docs/05-Chapter-5-Conclusion.md) | Chapter 5: Conclusions and Recommendations |
+| [`docs/06-Contribution-Matrix.md`](docs/06-Contribution-Matrix.md) | Team contribution matrix |
+
 ## Architecture
 
 ```
@@ -29,6 +42,18 @@ A full-stack IoT web application that detects touch/button presses on an **ESP32
 | Database    | MongoDB Atlas                                 |
 | Firmware    | Arduino IDE (ESP32)                           |
 | Deployment  | Vercel (frontend), Render (backend)           |
+
+## Team
+
+| Member | Role | GitHub |
+|--------|------|--------|
+| Lloyd | Project Lead & Full-Stack Developer | [@jmslydz](https://github.com/jmslydz) |
+| Aiken | Frontend Developer | [@aikendormidoa](https://github.com/aikendormidoa) |
+| Adrian | Backend Developer | [@Twobein07](https://github.com/Twobein07) |
+| Jericho | Firmware & Hardware Engineer | [@Salupantantan2003](https://github.com/Salupantantan2003) |
+| Jin | QA & Deployment | [@ITSMEJIN7](https://github.com/ITSMEJIN7) |
+
+Full contribution breakdown: [`docs/06-Contribution-Matrix.md`](docs/06-Contribution-Matrix.md)
 
 ## Features
 
@@ -203,16 +228,23 @@ const char* SERVER_URL    = "https://your-backend.onrender.com";
 
 ## 4. Deployment
 
+> **Note:** Deployment config files are already included:
+> - `backend/render.yaml` — Render Blueprint configuration
+> - `frontend/vercel.json` — Vercel SPA routing configuration
+> - `frontend/.env.production` — Production environment template
+
 ### Backend → Render
 
 1. Push your code to GitHub
-2. Go to [render.com](https://render.com) → New Web Service
-3. Connect your repo, set:
+2. Go to [render.com](https://render.com) → New Web Service (or Blueprint)
+3. Connect your repo. If using Web Service, set:
    - **Root Directory:** `backend`
    - **Build Command:** `npm install`
    - **Start Command:** `npm start`
 4. Add Environment Variables:
-   - `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_URL`
+   - `MONGODB_URI` — MongoDB Atlas connection string (required for persistence)
+   - `JWT_SECRET` — Random secure string
+   - `FRONTEND_URL` — Your Vercel frontend URL
 5. Deploy
 6. Seed the user: `curl -X POST https://your-app.onrender.com/api/auth/seed`
 
@@ -223,10 +255,20 @@ const char* SERVER_URL    = "https://your-backend.onrender.com";
 3. Import your repo, set:
    - **Root Directory:** `frontend`
    - **Framework:** Vite
-4. Add Environment Variables:
+4. Add Environment Variables (use values from `frontend/.env.production`):
    - `VITE_API_URL=https://your-app.onrender.com`
    - `VITE_SOCKET_URL=https://your-app.onrender.com`
 5. Deploy
+
+### ESP32 → Production Mode
+
+Update `esp32/touchguard32/config.h` with the production server URL:
+
+```cpp
+const char* SERVER_URL = "https://your-backend.onrender.com";
+```
+
+> **Important:** The ESP32's WiFi is 2.4GHz only. Ensure your deployment network supports 2.4GHz connections.
 
 ---
 
@@ -288,26 +330,53 @@ Valid statuses: `Touch Detected`, `Button Pressed`, `Device Online`, `Device Off
 
 ---
 
-## Git Workflow Example
+## Git Workflow (Rubric Requirements)
+
+### Branch naming convention
+| Prefix | Purpose | Example |
+|--------|---------|---------|
+| `feature/` | New features | `feature/auth-system` |
+| `fix/` | Bug fixes | `fix/socket-reconnect` |
+| `chore/` | Maintenance/cleanup | `chore/ui-cleanup` |
+
+### Pull Request workflow (no direct pushes to main)
 
 ```bash
-git checkout -b feature/auth-system
+# 1. Create a feature branch from main
+git checkout main
+git pull
+git checkout -b feature/your-feature
+
+# 2. Work and commit
 git add .
-git commit -m "Add JWT authentication middleware"
-git commit -m "Implement bcrypt password hashing for User model"
-git commit -m "Create login route with token generation"
+git commit -m "Add descriptive imperative message"
 
-git checkout -b feature/websocket-alerts
-git commit -m "Implement Socket.IO alert broadcasting"
-git commit -m "Add real-time dashboard with live activity feed"
+# 3. Push and create PR
+git push origin feature/your-feature
+# Go to GitHub → Create Pull Request → merge into main
 
-git checkout -b fix/socket-reconnect
-git commit -m "Fix ESP32 reconnection logic with exponential backoff"
-git commit -m "Add heartbeat mechanism for connection stability"
+# 4. Review and merge via PR (never push directly to main)
+```
 
-git checkout -b chore/ui-cleanup
-git commit -m "Refactor TailwindCSS classes for consistency"
-git commit -m "Add responsive layout for mobile devices"
+### Example commits from this project
+
+```bash
+feature/auth-system
+├── "Add JWT authentication middleware"
+├── "Implement bcrypt password hashing for User model"
+└── "Create login route with token generation"
+
+feature/websocket-alerts
+├── "Implement Socket.IO alert broadcasting"
+└── "Add real-time dashboard with live activity feed"
+
+fix/socket-reconnect
+├── "Fix ESP32 reconnection logic with exponential backoff"
+└── "Add heartbeat mechanism for connection stability"
+
+chore/ui-cleanup
+├── "Refactor TailwindCSS classes for consistency"
+└── "Add responsive layout for mobile devices"
 ```
 
 ---
