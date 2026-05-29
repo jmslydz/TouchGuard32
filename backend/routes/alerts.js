@@ -1,9 +1,10 @@
 const express = require('express');
 const Alert = require('../models/Alert');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
@@ -28,7 +29,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/latest', async (req, res) => {
+router.get('/latest', auth, async (req, res) => {
   try {
     const alert = await Alert.findOne().sort({ createdAt: -1 });
     res.json({ alert });
@@ -38,7 +39,7 @@ router.get('/latest', async (req, res) => {
   }
 });
 
-router.get('/stats', async (req, res) => {
+router.get('/stats', auth, async (req, res) => {
   try {
     const total = await Alert.countDocuments();
     const touchDetected = await Alert.countDocuments({ status: 'Touch Detected' });

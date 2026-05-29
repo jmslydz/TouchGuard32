@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 
 export default function Navbar() {
+  const { user, logout } = useAuth()
   const { connected, deviceOnline } = useSocket()
   const location = useLocation()
 
@@ -60,6 +62,18 @@ export default function Navbar() {
               <span className={`w-2 h-2 rounded-full ${deviceOnline ? 'bg-accent-green animate-pulse' : 'bg-gray-600'}`}></span>
               <span className="text-gray-400">ESP32</span>
             </div>
+          </div>
+
+          <div className="flex items-center gap-3 pl-4 border-l border-dark-600">
+            <span className="text-sm text-gray-400">
+              <span className="text-accent-green">{user?.username}</span>
+            </span>
+            <button
+              onClick={logout}
+              className="text-sm text-gray-500 hover:text-accent-red transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>

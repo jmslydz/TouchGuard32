@@ -1,17 +1,35 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AlertHistory from './pages/AlertHistory'
 import Settings from './pages/Settings'
+import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
+import { useAuth } from './context/AuthContext'
 
 export default function App() {
+  const { user } = useAuth()
+
   return (
     <div className="min-h-screen bg-dark-900">
-      <Navbar />
+      {user && <Navbar />}
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/history" element={<AlertHistory />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/history" element={
+          <ProtectedRoute>
+            <AlertHistory />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
