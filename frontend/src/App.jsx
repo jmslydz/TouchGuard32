@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AlertHistory from './pages/AlertHistory'
+import Settings from './pages/Settings'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
 import { useAuth } from './context/AuthContext'
@@ -22,6 +23,11 @@ export default function App() {
         <Route path="/history" element={
           <ProtectedRoute>
             <AlertHistory />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/" />} />

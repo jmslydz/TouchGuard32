@@ -39,6 +39,16 @@ export default function Navbar() {
             >
               Alert History
             </Link>
+            <Link
+              to="/settings"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === '/settings'
+                  ? 'bg-accent-green/10 text-accent-green border border-accent-green/30'
+                  : 'text-gray-400 hover:text-white hover:bg-dark-700'
+              }`}
+            >
+              Settings
+            </Link>
           </div>
         </div>
 
