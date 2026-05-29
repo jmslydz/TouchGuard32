@@ -1,29 +1,26 @@
 const express = require('express');
-const Alert = require('../models/Alert');
+const { memory } = require('../config/db');
 
 const router = express.Router();
 
-const validateAlertPayload = (body) => {
-  const { device, status, message } = body;
-  if (!device || typeof device !== 'string') return false;
-  if (!status || typeof status !== 'string') return false;
-  const validStatuses = ['Touch Detected', 'Button Pressed', 'Device Online', 'Device Offline', 'Motion Detected'];
-  if (!validStatuses.includes(status)) return false;
-  return true;
-};
+const VALID_STATUSES = ['Touch Detected', 'Button Pressed', 'Device Online', 'Device Offline', 'Motion Detected'];
 
 router.post('/alert', async (req, res) => {
   try {
-    if (!validateAlertPayload(req.body)) {
-      return res.status(400).json({ message: 'Invalid alert payload' });
+    const { device, status, message } = req.body;
+    if (!device || !status) {
+      return res.status(400).json({ message: 'Device and status required' });
     }
-
-    const alert = await Alert.create({
-      device: req.body.device.trim(),
-      status: req.body.status,
-      message: req.body.message || '',
-    });
-
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+    const alert = {
+      device: device.trim(),
+      status,
+      message: message || '',
+      createdAt: new Date(),
+    };
+    memory.alerts.unshift(alert);
     const io = req.app.get('io');
     if (io) {
       io.emit('alert', alert);
@@ -32,7 +29,6 @@ router.post('/alert', async (req, res) => {
         timestamp: alert.createdAt,
       });
     }
-
     res.status(201).json({ message: 'Alert recorded', alert });
   } catch (error) {
     console.error('Device alert error:', error.message);
@@ -43,15 +39,11 @@ router.post('/alert', async (req, res) => {
 router.post('/heartbeat', async (req, res) => {
   try {
     const { device } = req.body;
-    if (!device) {
-      return res.status(400).json({ message: 'Device name required' });
-    }
-
+    if (!device) return res.status(400).json({ message: 'Device name required' });
     const io = req.app.get('io');
     if (io) {
       io.emit('device-status', { device: device.trim(), status: 'online', lastSeen: new Date() });
     }
-
     res.json({ message: 'Heartbeat received', device: device.trim() });
   } catch (error) {
     console.error('Heartbeat error:', error.message);

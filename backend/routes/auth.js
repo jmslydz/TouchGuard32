@@ -1,76 +1,63 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const auth = require('../middleware/auth');
+const { memory } = require('../config/db');
 
 const router = express.Router();
 
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-
     if (!username || !password) {
       return res.status(400).json({ message: 'Username and password are required' });
     }
-
-    if (typeof username !== 'string' || typeof password !== 'string') {
-      return res.status(400).json({ message: 'Invalid input format' });
-    }
-
-    const user = await User.findOne({ username: username.trim() });
+    const user = memory.users.find(u => u.username === username.trim());
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-
-    const isMatch = await user.comparePassword(password);
+    const isMatch = bcrypt.compareSync(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-
     const token = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET,
+      { username: user.username },
+      process.env.JWT_SECRET || 'fallback_dev_secret',
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-      },
-    });
+    res.json({ token, user: { username: user.username } });
   } catch (error) {
     console.error('Login error:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-router.get('/me', auth, async (req, res) => {
+router.get('/me', async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const header = req.headers.authorization;
+    if (!header || !header.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No token provided' });
     }
-    res.json({ user });
+    const token = header.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_dev_secret');
+    const user = memory.users.find(u => u.username === decoded.username);
+    if (!user) return res.status(401).json({ message: 'User not found' });
+    res.json({ user: { username: user.username } });
   } catch (error) {
-    console.error('Get user error:', error.message);
-    res.status(500).json({ message: 'Server error' });
+    res.status(401).json({ message: 'Invalid token' });
   }
 });
 
 router.post('/seed', async (req, res) => {
   try {
-    const existing = await User.findOne({ username: 'admin' });
-    if (existing) {
+    if (memory.users.find(u => u.username === 'admin')) {
       return res.json({ message: 'Default user already exists' });
     }
-
-    await User.create({
+    const salt = bcrypt.genSaltSync(12);
+    memory.users.push({
       username: 'admin',
-      password: 'admin123',
+      password: bcrypt.hashSync('admin123', salt),
+      createdAt: new Date(),
     });
-
     res.json({ message: 'Default user created: admin / admin123' });
   } catch (error) {
     console.error('Seed error:', error.message);

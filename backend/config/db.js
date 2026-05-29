@@ -1,23 +1,27 @@
 const mongoose = require('mongoose');
 
+const memory = {
+  alerts: [],
+  users: [],
+  online: false,
+};
+
 const connectDB = async () => {
-  let uri = process.env.MONGODB_URI;
-
+  const uri = process.env.MONGODB_URI;
   if (!uri) {
-    console.log('No MONGODB_URI in .env — using in-memory MongoDB...');
-    const { MongoMemoryServer } = require('mongodb-memory-server');
-    const mongod = await MongoMemoryServer.create();
-    uri = mongod.getUri();
-    console.log(`In-memory MongoDB started at ${uri}`);
+    console.log('No MONGODB_URI — using in-memory store (data resets on restart)');
+    memory.online = true;
+    return;
   }
-
   try {
-    const conn = await mongoose.connect(uri);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`MongoDB connection error: ${error.message}`);
-    process.exit(1);
+    await mongoose.connect(uri);
+    console.log('MongoDB Connected');
+    memory.online = false;
+  } catch (err) {
+    console.error('MongoDB error:', err.message);
+    console.log('Falling back to in-memory store');
+    memory.online = true;
   }
 };
 
-module.exports = connectDB;
+module.exports = { connectDB, memory };

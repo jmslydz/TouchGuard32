@@ -4,8 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
-const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
-const connectDB = require('./config/db');
+const { connectDB, memory } = require('./config/db');
 
 const authRoutes = require('./routes/auth');
 const alertRoutes = require('./routes/alerts');
@@ -33,9 +32,6 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10kb' }));
 
-app.use('/api', apiLimiter);
-app.use('/api/auth', authLimiter);
-
 app.use('/api/auth', authRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/device', deviceRoutes);
@@ -48,14 +44,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-const deviceStatus = new Map();
-
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
 
   socket.on('esp32-connect', (data) => {
     const deviceName = data?.device || 'ESP32';
-    deviceStatus.set(deviceName, { status: 'online', lastSeen: new Date() });
+    memory.deviceStatus = memory.deviceStatus || new Map();
+    memory.deviceStatus.set(deviceName, { status: 'online', lastSeen: new Date() });
     io.emit('device-status', { device: deviceName, status: 'online', lastSeen: new Date() });
     console.log(`ESP32 connected: ${deviceName}`);
   });
@@ -67,24 +62,22 @@ io.on('connection', (socket) => {
       message: data?.message || '',
       createdAt: new Date(),
     };
-
     io.emit('alert', alertData);
     io.emit('notification', {
       message: `${alertData.device}: ${alertData.status}`,
       timestamp: alertData.createdAt,
     });
-
-    const Alert = require('./models/Alert');
-    Alert.create(alertData).catch((err) => console.error('DB save error:', err.message));
+    memory.alerts.unshift(alertData);
   });
 
   socket.on('esp32-disconnect', () => {
-    deviceStatus.forEach((value, key) => {
+    memory.deviceStatus = memory.deviceStatus || new Map();
+    memory.deviceStatus.forEach((value, key) => {
       if (value.status === 'online') {
         io.emit('device-status', { device: key, status: 'offline', lastSeen: new Date() });
       }
     });
-    deviceStatus.clear();
+    memory.deviceStatus.clear();
   });
 
   socket.on('disconnect', () => {
@@ -94,21 +87,17 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-const seedDefaultUser = async () => {
-  try {
-    const User = require('./models/User');
-    const existing = await User.findOne({ username: 'admin' });
-    if (!existing) {
-      await User.create({ username: 'admin', password: 'admin123' });
-      console.log('Default user seeded: admin / admin123');
-    }
-  } catch (err) {
-    console.error('Seed error:', err.message);
+connectDB().then(() => {
+  if (!memory.users.find(u => u.username === 'admin')) {
+    const bcrypt = require('bcryptjs');
+    const salt = bcrypt.genSaltSync(12);
+    memory.users.push({
+      username: 'admin',
+      password: bcrypt.hashSync('admin123', salt),
+      createdAt: new Date(),
+    });
+    console.log('Default user seeded: admin / admin123');
   }
-};
-
-connectDB().then(async () => {
-  await seedDefaultUser();
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`WebSocket server ready`);
